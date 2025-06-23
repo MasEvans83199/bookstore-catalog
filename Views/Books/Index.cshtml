@@ -1,4 +1,5 @@
 @model BookIndexViewModel
+@using BookCatalog.Helpers
 
 @{
     ViewData["Title"] = "Book Catalog";
@@ -39,7 +40,7 @@
                     <h5 class="card-title">@book.Title</h5>
                     <p class="card-text text-muted">@book.Author</p>
                     <p class="card-text">
-                        <span class="badge bg-secondary">@book.Genre</span>
+                        <span class="badge @GenreStyleHelper.GetGenreBadgeClass(book.Genre)">@book.Genre</span>
                     </p>
                     <p class="card-text"><strong>$@book.Price</strong></p>
                     <a asp-action="Details" asp-route-id="@book.Id" class="btn btn-primary btn-sm" style="background-color: #5d3a00; border: none;">View</a>

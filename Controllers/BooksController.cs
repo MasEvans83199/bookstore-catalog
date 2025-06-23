@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -114,6 +115,61 @@ namespace BookCatalog.Controllers
 
             ViewBag.Genres = new SelectList(GetGenres(), book.Genre);
             return View(book);
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> Search(string query)
+        {
+            ViewBag.Query = query;
+
+            if (string.IsNullOrWhiteSpace(query))
+                return View(new List<GoogleBookViewModel>());
+
+            var httpClient = new HttpClient();
+            var url = $"https://www.googleapis.com/books/v1/volumes?q={Uri.EscapeDataString(query)}";
+
+            var response = await httpClient.GetStringAsync(url);
+            var data = JsonDocument.Parse(response);
+
+            var results = new List<GoogleBookViewModel>();
+
+            foreach (var item in data.RootElement.GetProperty("items").EnumerateArray())
+            {
+                var volume = item.GetProperty("volumeInfo");
+                
+                var saleInfo = item.GetProperty("saleInfo");
+
+                decimal? price = null;
+                if (saleInfo.TryGetProperty("saleability", out var saleStatus) && saleStatus.GetString() == "FOR_SALE")
+                {
+                    if (saleInfo.TryGetProperty("listPrice", out var listPrice) &&
+                        listPrice.TryGetProperty("amount", out var amount))
+                    {
+                        price = amount.GetDecimal();
+                    }
+                }
+
+                results.Add(new GoogleBookViewModel
+                {
+                    Title = volume.GetProperty("title").GetString(),
+                    Author = volume.TryGetProperty("authors", out var authors) ? authors[0].GetString() : "Unknown",
+                    Thumbnail = volume.TryGetProperty("imageLinks", out var images) && images.TryGetProperty("thumbnail", out var thumb)
+                        ? thumb.GetString()
+                        : "/images/fallback.jpg",
+                    Category = volume.TryGetProperty("categories", out var cats) ? cats[0].GetString() : "Uncategorized",
+                    AverageRating = volume.TryGetProperty("averageRating", out var rating) ? rating.GetDouble() : null,
+                    Price = price
+                });
+            }
+
+            return View(results);
+        }
+
+        [HttpPost]
+        public IActionResult Import(Book importedBook)
+        {
+            ViewBag.Genres = new SelectList(GetGenres(), importedBook.Genre);
+            return View("Create", importedBook); // Preload form with Google data
         }
 
         // POST: Books/Edit/5
