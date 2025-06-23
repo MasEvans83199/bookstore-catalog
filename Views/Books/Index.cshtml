@@ -4,7 +4,11 @@
     ViewData["Title"] = "Book Catalog";
 }
 
-<h1 class="my-4">Book Catalog</h1>
+<div class="bg-light p-4 mb-4 rounded shadow-sm text-center" style="font-family: 'Playfair Display';">
+    <h1 class="display-5">Explore the Catalog</h1>
+    <p class="lead text-muted">Find timeless classics and hidden gems</p>
+</div>
+
 
 <form asp-controller="Books" asp-action="Index" method="get" class="mb-4 row g-2">
     <div class="col-md-4">
@@ -27,8 +31,10 @@
     @foreach (var book in Model.Books)
     {
         <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <img src="@book.CoverImageUrl" class="card-img-top" style="height: 300px; object-fit: cover;" alt="Book cover">
+            <div class="card h-100 border-0 shadow-sm" style="background-color: #fffdf9;">
+                <img src="@book.CoverImageUrl" class="card-img-top"
+                         onerror="this.onerror=null;this.src='/images/fallback.jpg';"
+                         style="height: 300px; object-fit: cover;" alt="Book cover">
                 <div class="card-body">
                     <h5 class="card-title">@book.Title</h5>
                     <p class="card-text text-muted">@book.Author</p>
@@ -36,9 +42,9 @@
                         <span class="badge bg-secondary">@book.Genre</span>
                     </p>
                     <p class="card-text"><strong>$@book.Price</strong></p>
-                    <a asp-action="Details" asp-route-id="@book.Id" class="btn btn-primary btn-sm">View</a>
-                    <a asp-action="Edit" asp-route-id="@book.Id" class="btn btn-warning btn-sm">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@book.Id" class="btn btn-danger btn-sm">Delete</a>
+                    <a asp-action="Details" asp-route-id="@book.Id" class="btn btn-primary btn-sm" style="background-color: #5d3a00; border: none;">View</a>
+                    <a asp-action="Edit" asp-route-id="@book.Id" class="btn btn-primary btn-sm" style="background-color: #5d3a00; border: none;">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@book.Id" class="btn btn-primary btn-sm" style="background-color: #5d3a00; border: none;">Delete</a>
                 </div>
             </div>
         </div>

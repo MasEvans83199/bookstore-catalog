@@ -78,6 +78,7 @@ namespace BookCatalog.Controllers
         // GET: Books/Create
         public IActionResult Create()
         {
+            ViewBag.Genres = new SelectList(GetGenres());
             return View();
         }
 
@@ -110,6 +111,8 @@ namespace BookCatalog.Controllers
             {
                 return NotFound();
             }
+
+            ViewBag.Genres = new SelectList(GetGenres(), book.Genre);
             return View(book);
         }
 
@@ -184,6 +187,20 @@ namespace BookCatalog.Controllers
         private bool BookExists(int id)
         {
             return _context.Books.Any(e => e.Id == id);
+        }
+        
+        private List<string> GetGenres()
+        {
+            return new List<string>
+            {
+                "Classic",
+                "Dystopian",
+                "Fiction",
+                "Fantasy",
+                "Romance",
+                "Gothic",
+                "Philosophical"
+            };
         }
     }
 }

@@ -9,15 +9,19 @@ public class Book
     [Required]
     public string Title { get; set; }
 
+    [Required]
     public string Author { get; set; }
 
+    [Required]
     public string Genre { get; set; }
 
-    [Range(0, int.MaxValue)]
+    [Range(0, int.MaxValue, ErrorMessage = "Quantity must be 0 or more")]
     public int Quantity { get; set; }
 
+    [Range(0, int.MaxValue, ErrorMessage = "Price must be between $0.01 and $1000.00")]
     [DataType(DataType.Currency)]
     public decimal Price { get; set; }
 
+    [Url(ErrorMessage = "Must be a valid image URL")]
     public string CoverImageUrl { get; set; }
 }
