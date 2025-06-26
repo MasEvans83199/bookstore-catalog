@@ -10,6 +10,38 @@
     <p class="lead text-muted">Find timeless classics and hidden gems</p>
 </div>
 
+<p class="text-muted">
+    Staff Picks Count: @Model.StaffPicks?.Count
+</p>
+
+
+@if (Model.StaffPicks?.Count > 0)
+{
+    <div id="staffPicksCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            @for (int i = 0; i < Model.StaffPicks.Count; i++)
+            {
+                var book = Model.StaffPicks[i];
+                <div class="carousel-item @(i == 0 ? "active" : "")">
+                    <div class="card mx-auto" style="width: 18rem;">
+                        <img src="@book.CoverImageUrl" class="card-img-top" style="height: 300px; object-fit: cover;" />
+                        <div class="card-body text-center">
+                            <h5 class="card-title">@book.Title</h5>
+                            <p class="card-text text-muted">@book.Author</p>
+                            <a asp-action="Details" asp-route-id="@book.Id" class="btn btn-outline-primary btn-sm">View</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#staffPicksCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#staffPicksCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+}
 
 <form asp-controller="Books" asp-action="Index" method="get" class="mb-4 row g-2">
     <div class="col-md-4">

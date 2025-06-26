@@ -14,6 +14,8 @@ public class Book
 
     [Required]
     public string Genre { get; set; }
+    [Display(Name = "ISBN")]
+    public string? ISBN { get; set; }
 
     [Range(0, int.MaxValue, ErrorMessage = "Quantity must be 0 or more")]
     public int Quantity { get; set; }
@@ -24,7 +26,11 @@ public class Book
 
     [Url(ErrorMessage = "Must be a valid image URL")]
     public string CoverImageUrl { get; set; }
+    public string CoverImagePath { get; set; }
+
     
-    [Range(0, 5, ErrorMessage = "Rating must be between 0 and 5")]
+    [Range(0.0, 5.0, ErrorMessage = "Rating must be between 0 and 5")]
     public double? Rating { get; set; } 
+    
+    public bool IsStaffPick { get; set; }
 }

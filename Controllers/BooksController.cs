@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using BookCatalog.Data;
 using BookCatalog.Models;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 namespace BookCatalog.Controllers
 {
@@ -23,33 +26,30 @@ namespace BookCatalog.Controllers
         // GET: Books
         public async Task<IActionResult> Index(string searchString, string bookGenre)
         {
-            // Get distinct genres for the filter dropdown
+
             var genreQuery = _context.Books
                 .OrderBy(b => b.Genre)
                 .Select(b => b.Genre)
                 .Distinct();
-
-            // Start with all books
+            
             var books = _context.Books.AsQueryable();
 
-            // Apply search by title or author
             if (!string.IsNullOrEmpty(searchString))
             {
                 books = books.Where(b =>
                     b.Title.Contains(searchString) ||
                     b.Author.Contains(searchString));
             }
-
-            // Apply genre filter
+            
             if (!string.IsNullOrEmpty(bookGenre))
             {
                 books = books.Where(b => b.Genre == bookGenre);
             }
-
-            // Create a view model with books + genre list
+            
             var viewModel = new BookIndexViewModel
             {
                 Books = await books.ToListAsync(),
+                StaffPicks = await _context.Books.Where(b => b.IsStaffPick).ToListAsync(),
                 Genres = new SelectList(await genreQuery.ToListAsync()),
                 SearchString = searchString,
                 BookGenre = bookGenre
@@ -88,7 +88,7 @@ namespace BookCatalog.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Author,Genre,Quantity,Price,CoverImageUrl")] Book book)
+        public async Task<IActionResult> Create([Bind("Id,Title,Author,Genre,Quantity,Price,CoverImageUrl,CoverImagePath")] Book book)
         {
             if (ModelState.IsValid)
             {
@@ -96,6 +96,7 @@ namespace BookCatalog.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+            ViewBag.Genres = new SelectList(GetGenres(), book.Genre);
             return View(book);
         }
 
@@ -137,28 +138,63 @@ namespace BookCatalog.Controllers
             {
                 var volume = item.GetProperty("volumeInfo");
                 
-                var saleInfo = item.GetProperty("saleInfo");
+                string title = volume.GetProperty("title").GetString();
 
-                decimal? price = null;
-                if (saleInfo.TryGetProperty("saleability", out var saleStatus) && saleStatus.GetString() == "FOR_SALE")
+                // Get author
+                string author = volume.TryGetProperty("authors", out var authors)
+                    ? authors[0].GetString()
+                    : "Unknown";
+
+                // Get genre/category
+                string category = volume.TryGetProperty("categories", out var cats)
+                    ? cats[0].GetString()
+                    : "Uncategorized";
+
+                // Get rating
+                double? averageRating = volume.TryGetProperty("averageRating", out var rating)
+                    ? rating.GetDouble()
+                    : null;
+
+                // Get price (optional: leave as is or use your logic)
+                decimal price = 0;
+
+                // Get Google thumbnail
+                string googleThumbnail = volume.TryGetProperty("imageLinks", out var images) &&
+                                         images.TryGetProperty("thumbnail", out var thumb)
+                    ? thumb.GetString()
+                    : null;
+                
+                string isbn = null;
+                if (volume.TryGetProperty("industryIdentifiers", out var ids))
                 {
-                    if (saleInfo.TryGetProperty("listPrice", out var listPrice) &&
-                        listPrice.TryGetProperty("amount", out var amount))
+                    foreach (var id in ids.EnumerateArray())
                     {
-                        price = amount.GetDecimal();
+                        if (id.GetProperty("type").GetString() == "ISBN_13")
+                        {
+                            isbn = id.GetProperty("identifier").GetString();
+                            break;
+                        }
                     }
                 }
 
+                string openLibraryThumbnail = !string.IsNullOrEmpty(isbn)
+                    ? $"https://covers.openlibrary.org/b/isbn/{isbn}-L.jpg"
+                    : null;
+                
+                string finalThumbnail = IsGoogleThumbnailUsable(googleThumbnail)
+                    ? googleThumbnail
+                    : (!string.IsNullOrEmpty(openLibraryThumbnail) ? openLibraryThumbnail : "/images/fallback.jpg");
+
                 results.Add(new GoogleBookViewModel
                 {
-                    Title = volume.GetProperty("title").GetString(),
-                    Author = volume.TryGetProperty("authors", out var authors) ? authors[0].GetString() : "Unknown",
-                    Thumbnail = volume.TryGetProperty("imageLinks", out var images) && images.TryGetProperty("thumbnail", out var thumb)
-                        ? thumb.GetString()
-                        : "/images/fallback.jpg",
-                    Category = volume.TryGetProperty("categories", out var cats) ? cats[0].GetString() : "Uncategorized",
-                    AverageRating = volume.TryGetProperty("averageRating", out var rating) ? rating.GetDouble() : null,
-                    Price = price
+                    Title = title,
+                    Author = author,
+                    Category = category,
+                    AverageRating = averageRating,
+                    Price = price,
+                    ISBN = isbn,
+                    GoogleThumbnail = googleThumbnail,
+                    Thumbnail = finalThumbnail
                 });
             }
 
@@ -166,10 +202,49 @@ namespace BookCatalog.Controllers
         }
 
         [HttpPost]
-        public IActionResult Import(Book importedBook)
+        public async Task<IActionResult> Import(Book importedBook, string FallbackImageUrl)
         {
+            if (!string.IsNullOrEmpty(importedBook.CoverImageUrl))
+            {
+                var webClient = new HttpClient();
+                try
+                {
+                    var imageBytes = await webClient.GetByteArrayAsync(importedBook.CoverImageUrl);
+
+                    if (imageBytes.Length <= 100 && !string.IsNullOrEmpty(FallbackImageUrl))
+                    {
+                        imageBytes = await webClient.GetByteArrayAsync(FallbackImageUrl);
+                    }
+
+                    if (imageBytes.Length > 100)
+                    {
+                        var fileName = $"{Guid.NewGuid()}.jpg";
+                        var savePath = Path.Combine("wwwroot", "images", "covers", fileName);
+                        var relativePath = $"/images/covers/{fileName}";
+
+                        Directory.CreateDirectory(Path.GetDirectoryName(savePath)!);
+                        await System.IO.File.WriteAllBytesAsync(savePath, imageBytes);
+
+                        importedBook.CoverImagePath = relativePath;
+                    }
+                    else
+                    {
+                        importedBook.CoverImagePath = "/images/fallback.jpg";
+                    }
+                }
+                catch
+                {
+                    importedBook.CoverImagePath = "/images/fallback.jpg";
+                }
+            }
+            else
+            {
+                importedBook.CoverImagePath = "/images/fallback.jpg";
+            }
+
             ViewBag.Genres = new SelectList(GetGenres(), importedBook.Genre);
-            return View("Create", importedBook); // Preload form with Google data
+            ModelState.Clear();
+            return View("Create", importedBook);
         }
 
         // POST: Books/Edit/5
@@ -257,6 +332,11 @@ namespace BookCatalog.Controllers
                 "Gothic",
                 "Philosophical"
             };
+        }
+        
+        private bool IsGoogleThumbnailUsable(string url)
+        {
+            return !string.IsNullOrEmpty(url) && !url.Contains("no_cover_thumb");
         }
     }
 }
