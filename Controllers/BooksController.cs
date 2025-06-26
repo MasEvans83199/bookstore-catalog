@@ -24,7 +24,7 @@ namespace BookCatalog.Controllers
         }
 
         // GET: Books
-        public async Task<IActionResult> Index(string searchString, string bookGenre)
+        public async Task<IActionResult> Index(string searchString, string bookGenre, string viewMode = "grid")
         {
 
             var genreQuery = _context.Books
@@ -46,6 +46,18 @@ namespace BookCatalog.Controllers
                 books = books.Where(b => b.Genre == bookGenre);
             }
             
+            if (!string.IsNullOrEmpty(viewMode))
+            {
+                TempData["ViewMode"] = viewMode;
+            }
+            else if (TempData.ContainsKey("ViewMode"))
+            {
+                viewMode = TempData["ViewMode"].ToString();
+                TempData.Keep("ViewMode");
+            }
+
+            ViewBag.ViewMode = viewMode;
+
             var viewModel = new BookIndexViewModel
             {
                 Books = await books.ToListAsync(),
@@ -139,26 +151,21 @@ namespace BookCatalog.Controllers
                 var volume = item.GetProperty("volumeInfo");
                 
                 string title = volume.GetProperty("title").GetString();
-
-                // Get author
+                
                 string author = volume.TryGetProperty("authors", out var authors)
                     ? authors[0].GetString()
                     : "Unknown";
-
-                // Get genre/category
+                
                 string category = volume.TryGetProperty("categories", out var cats)
                     ? cats[0].GetString()
                     : "Uncategorized";
 
-                // Get rating
                 double? averageRating = volume.TryGetProperty("averageRating", out var rating)
                     ? rating.GetDouble()
                     : null;
 
-                // Get price (optional: leave as is or use your logic)
                 decimal price = 0;
 
-                // Get Google thumbnail
                 string googleThumbnail = volume.TryGetProperty("imageLinks", out var images) &&
                                          images.TryGetProperty("thumbnail", out var thumb)
                     ? thumb.GetString()
@@ -252,7 +259,7 @@ namespace BookCatalog.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Author,Genre,Quantity,Price,CoverImageUrl")] Book book)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Author,Genre,Quantity,Price,CoverImageUrl,CoverImagePath,Rating")] Book book)
         {
             if (id != book.Id)
             {
@@ -265,20 +272,19 @@ namespace BookCatalog.Controllers
                 {
                     _context.Update(book);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!BookExists(book.Id))
-                    {
                         return NotFound();
-                    }
                     else
-                    {
                         throw;
-                    }
                 }
-                return RedirectToAction(nameof(Index));
             }
+
+            ViewBag.Genres = new SelectList(GetGenres(), book.Genre);
+
             return View(book);
         }
 
@@ -326,14 +332,25 @@ namespace BookCatalog.Controllers
             {
                 "Classic",
                 "Dystopian",
-                "Fiction",
                 "Fantasy",
                 "Romance",
                 "Gothic",
-                "Philosophical"
+                "Philosophical",
+                "Fiction",
+                "Mystery",
+                "Biography",
+                "Autobiography",
+                "Science Fiction",
+                "Historical Fiction",
+                "Horror",
+                "Thriller",
+                "Non-Fiction",
+                "Young Adult",
+                "Adventure",
+                "Poetry"
             };
         }
-        
+
         private bool IsGoogleThumbnailUsable(string url)
         {
             return !string.IsNullOrEmpty(url) && !url.Contains("no_cover_thumb");
