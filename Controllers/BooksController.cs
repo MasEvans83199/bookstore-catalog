@@ -24,14 +24,13 @@ namespace BookCatalog.Controllers
         }
 
         // GET: Books
-        public async Task<IActionResult> Index(string searchString, string bookGenre, string viewMode = "grid")
+        public async Task<IActionResult> Index(string searchString, string bookGenre, string sortOrder, string viewMode = "grid")
         {
-
             var genreQuery = _context.Books
                 .OrderBy(b => b.Genre)
                 .Select(b => b.Genre)
                 .Distinct();
-            
+
             var books = _context.Books.AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
@@ -40,11 +39,23 @@ namespace BookCatalog.Controllers
                     b.Title.Contains(searchString) ||
                     b.Author.Contains(searchString));
             }
-            
+
             if (!string.IsNullOrEmpty(bookGenre))
             {
                 books = books.Where(b => b.Genre == bookGenre);
             }
+            
+            ViewBag.CurrentSort = sortOrder;
+            books = sortOrder switch
+            {
+                "title_desc" => books.OrderByDescending(b => b.Title),
+                "author" => books.OrderBy(b => b.Author),
+                "author_desc" => books.OrderByDescending(b => b.Author),
+                "price" => books.OrderBy(b => b.Price),
+                "price_desc" => books.OrderByDescending(b => b.Price),
+                "rating_desc" => books.OrderByDescending(b => b.Rating),
+                _ => books.OrderBy(b => b.Title),
+            };
             
             if (!string.IsNullOrEmpty(viewMode))
             {
@@ -188,20 +199,18 @@ namespace BookCatalog.Controllers
                     ? $"https://covers.openlibrary.org/b/isbn/{isbn}-L.jpg"
                     : null;
                 
-                string finalThumbnail = IsGoogleThumbnailUsable(googleThumbnail)
+                string finalThumbnail = IsGoogleThumbnailUsable(googleThumbnail ?? "")
                     ? googleThumbnail
                     : (!string.IsNullOrEmpty(openLibraryThumbnail) ? openLibraryThumbnail : "/images/fallback.jpg");
 
                 results.Add(new GoogleBookViewModel
                 {
-                    Title = title,
-                    Author = author,
-                    Category = category,
-                    AverageRating = averageRating,
-                    Price = price,
-                    ISBN = isbn,
-                    GoogleThumbnail = googleThumbnail,
-                    Thumbnail = finalThumbnail
+                    Title = title ?? "",
+                    Author = author ?? "",
+                    Category = category ?? "",
+                    ISBN = isbn ?? "",
+                    GoogleThumbnail = googleThumbnail ?? "",
+                    Thumbnail = finalThumbnail ?? ""
                 });
             }
 
@@ -351,7 +360,7 @@ namespace BookCatalog.Controllers
             };
         }
 
-        private bool IsGoogleThumbnailUsable(string url)
+        private bool IsGoogleThumbnailUsable(string? url)
         {
             return !string.IsNullOrEmpty(url) && !url.Contains("no_cover_thumb");
         }

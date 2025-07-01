@@ -71,8 +71,9 @@
 </div>
 
 <form asp-controller="Books" asp-action="Index" method="get" class="mb-4 row g-2">
+    <input type="hidden" name="viewMode" value="@ViewBag.ViewMode" />
     <div class="col-md-4">
-        <input type="text" name="searchString" value="@Model.SearchString" class="form-control" placeholder="Search by title or author" />
+        <input type="text" name="searchString" value="@Model.SearchString" class="form-control" placeholder="Search by title or author"/>
     </div>
     <div class="col-md-4">
         <select asp-for="BookGenre" asp-items="Model.Genres" class="form-select">
@@ -84,6 +85,31 @@
     </div>
     <div class="col-md-2">
         <a asp-action="Index" class="btn btn-secondary w-100">Reset</a>
+    </div>
+    <div class="col-md-4">
+        <label for="sortOrder" class="form-label">Sort By</label>
+        <select id="sortOrder" name="sortOrder" class="form-select" onchange="this.form.submit()">
+            @foreach (var option in new List<(string Value, string Text)>
+                      {
+                          ("", "Sort by Title (A-Z)"),
+                          ("title_desc", "Title (Z-A)"),
+                          ("author", "Author (A-Z)"),
+                          ("author_desc", "Author (Z-A)"),
+                          ("price", "Price (Low to High)"),
+                          ("price_desc", "Price (High to Low)"),
+                          ("rating_desc", "Rating (High to Low)")
+                      })
+            {
+                if ((ViewBag.CurrentSort as string ?? "") == option.Value)
+                {
+                    <option value="@option.Value" selected>@option.Text</option>
+                }
+                else
+                {
+                    <option value="@option.Value">@option.Text</option>
+                }
+            }
+        </select>
     </div>
 </form>
 
