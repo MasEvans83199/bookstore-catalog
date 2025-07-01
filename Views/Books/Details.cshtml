@@ -1,24 +1,50 @@
 @model Book
 
 @{
-    ViewData["Title"] = "Book Details";
+    ViewData["Title"] = Model.Title;
 }
 
 <div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-lg">
-                <img src="@Model.CoverImageUrl" class="card-img-top" style="height: 500px; object-fit: cover;" alt="Book cover">
+    <div class="card shadow-sm" style="background-color: #fffdf9;">
+        <div class="row g-0">
+            <div class="col-md-4">
+                <img src="@Model.CoverImageUrl"
+                     onerror="this.onerror=null;this.src='/images/fallback.jpg';"
+                     class="img-fluid rounded-start"
+                     alt="Book cover"
+                     style="object-fit: cover; height: 100%; width: 100%;">
+            </div>
+            <div class="col-md-8">
                 <div class="card-body">
-                    <h2 class="card-title">@Model.Title</h2>
-                    <h5 class="card-subtitle mb-2 text-muted">by @Model.Author</h5>
-                    <p class="card-text mt-3">
-                        <strong>Genre:</strong> @Model.Genre<br />
-                        <strong>Price:</strong> $@Model.Price<br />
-                        <strong>In Stock:</strong> @Model.Quantity
+                    <h2 class="card-title mb-3" style="font-family: 'Playfair Display';">@Model.Title</h2>
+                    <h5 class="card-subtitle mb-2 text-muted">@Model.Author</h5>
+                    <p class="mb-2">
+                        <span class="badge @BookCatalog.Helpers.GenreStyleHelper.GetGenreBadgeClass(Model.Genre)">
+                            @Model.Genre
+                        </span>
+                        @if (Model.IsStaffPick)
+                        {
+                            <span class="badge bg-success ms-2">Staff Pick ⭐</span>
+                        }
                     </p>
+                    
+                    <h4 class="text-primary mt-3">$@Model.Price</h4>
+                    
+                    @if (Model.Rating.HasValue)
+                    {
+                        <p class="mb-2">
+                            <i class="fas fa-star text-warning"></i> @Model.Rating.Value.ToString("0.0") / 5
+                        </p>
+                    }
+                    
+                    <hr />
+                    <h5 class="mb-2">Description</h5>
+                    <p class="text-muted">
+                        @(!string.IsNullOrWhiteSpace(Model.Description) ? Model.Description : "No description available.")
+                    </p>
+                    
                     <div class="mt-4">
-                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">Edit</a>
                         <a asp-action="Index" class="btn btn-secondary">Back to Catalog</a>
                     </div>
                 </div>

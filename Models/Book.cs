@@ -8,6 +8,8 @@ public class Book
 
     [Required]
     public string Title { get; set; } = "";
+    
+    public string? Description { get; set; }
 
     [Required]
     public string Author { get; set; } = "";
@@ -22,7 +24,6 @@ public class Book
     [Required]
     [Range(0, 999.99, ErrorMessage = "Price must be a non-negative number.")]
     public decimal Price { get; set; }
-
     public string? CoverImageUrl { get; set; }
     public string? CoverImagePath { get; set; }
 
