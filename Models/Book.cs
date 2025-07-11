@@ -33,4 +33,5 @@ public class Book
     public string? ISBN { get; set; }
 
     public bool IsStaffPick { get; set; }
+    public bool IsFavorite { get; set; } = false;
 }

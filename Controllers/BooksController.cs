@@ -24,7 +24,7 @@ namespace BookCatalog.Controllers
         }
 
         // GET: Books
-        public async Task<IActionResult> Index(string searchString, string bookGenre, string sortOrder, string viewMode = "grid")
+        public async Task<IActionResult> Index(string searchString, string bookGenre, string sortOrder, bool showFavorites = false, string viewMode = "grid")
         {
             var genreQuery = _context.Books
                 .OrderBy(b => b.Genre)
@@ -57,6 +57,13 @@ namespace BookCatalog.Controllers
                 _ => books.OrderBy(b => b.Title),
             };
             
+            if (showFavorites)
+            {
+                books = books.Where(b => b.IsFavorite);
+            }
+
+            ViewBag.ShowFavorites = showFavorites;
+
             if (!string.IsNullOrEmpty(viewMode))
             {
                 TempData["ViewMode"] = viewMode;
@@ -96,7 +103,18 @@ namespace BookCatalog.Controllers
                 return NotFound();
             }
 
-            return View(book);
+            var staffPicks = await _context.Books
+                .Where(b => b.IsStaffPick && b.Id != book.Id)
+                .Take(4)
+                .ToListAsync();
+
+            var viewModel = new BookDetailsViewModel
+            {
+                Book = book,
+                StaffPicks = staffPicks
+            };
+            
+            return View(viewModel);
         }
 
         // GET: Books/Create
@@ -313,6 +331,19 @@ namespace BookCatalog.Controllers
             }
 
             return View(book);
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> ToggleFavorite(int id)
+        {
+            var book = await _context.Books.FindAsync(id);
+            if (book == null) return NotFound();
+
+            book.IsFavorite = !book.IsFavorite;
+            _context.Update(book);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
         // POST: Books/Delete/5

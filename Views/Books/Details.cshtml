@@ -1,50 +1,51 @@
-@model Book
+@using BookCatalog.Helpers
+@model BookDetailsViewModel
 
 @{
-    ViewData["Title"] = Model.Title;
+    ViewData["Title"] = Model.Book.Title;
 }
 
 <div class="container mt-4">
     <div class="card shadow-sm" style="background-color: #fffdf9;">
-        <div class="row g-0">
-            <div class="col-md-4">
-                <img src="@Model.CoverImageUrl"
+        <div class="row">
+            <div class="col-12 col-md-4">
+                <img src="@Model.Book.CoverImageUrl"
                      onerror="this.onerror=null;this.src='/images/fallback.jpg';"
                      class="img-fluid rounded-start"
                      alt="Book cover"
                      style="object-fit: cover; height: 100%; width: 100%;">
             </div>
-            <div class="col-md-8">
+            <div class="col-12 col-md-8">
                 <div class="card-body">
-                    <h2 class="card-title mb-3" style="font-family: 'Playfair Display';">@Model.Title</h2>
-                    <h5 class="card-subtitle mb-2 text-muted">@Model.Author</h5>
+                    <h2 class="card-title mb-3" style="font-family: 'Playfair Display';">@Model.Book.Title</h2>
+                    <h5 class="card-subtitle mb-2 text-muted">@Model.Book.Author</h5>
                     <p class="mb-2">
-                        <span class="badge @BookCatalog.Helpers.GenreStyleHelper.GetGenreBadgeClass(Model.Genre)">
-                            @Model.Genre
+                        <span class="badge @BookCatalog.Helpers.GenreStyleHelper.GetGenreBadgeClass(Model.Book.Genre)">
+                            @Model.Book.Genre
                         </span>
-                        @if (Model.IsStaffPick)
+                        @if (Model.Book.IsStaffPick)
                         {
                             <span class="badge bg-success ms-2">Staff Pick ⭐</span>
                         }
                     </p>
                     
-                    <h4 class="text-primary mt-3">$@Model.Price</h4>
+                    <h4 class="text-primary mt-3">$@Model.Book.Price</h4>
                     
-                    @if (Model.Rating.HasValue)
+                    @if (Model.Book.Rating.HasValue)
                     {
                         <p class="mb-2">
-                            <i class="fas fa-star text-warning"></i> @Model.Rating.Value.ToString("0.0") / 5
+                            <i class="fas fa-star text-warning"></i> @Model.Book.Rating.Value.ToString("0.0") / 5
                         </p>
                     }
                     
                     <hr />
                     <h5 class="mb-2">Description</h5>
                     <p class="text-muted">
-                        @(!string.IsNullOrWhiteSpace(Model.Description) ? Model.Description : "No description available.")
+                        @(!string.IsNullOrWhiteSpace(Model.Book.Description) ? Model.Book.Description : "No description available.")
                     </p>
                     
                     <div class="mt-4">
-                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">Edit</a>
+                        <a asp-action="Edit" asp-route-id="@Model.Book.Id" class="btn btn-warning me-2">Edit</a>
                         <a asp-action="Index" class="btn btn-secondary">Back to Catalog</a>
                     </div>
                 </div>
@@ -52,3 +53,28 @@
         </div>
     </div>
 </div>
+
+@if (Model.StaffPicks != null && Model.StaffPicks.Any())
+{
+    <hr class="my-4" />
+    <h3 class="mb-3">Other Staff Picks</h3>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+        @foreach (var pick in Model.StaffPicks)
+        {
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 shadow-sm" style="background-color: #fffdf9;">
+                    <img src="@pick.CoverImageUrl"
+                         onerror="this.onerror=null;this.src='/images/fallback.jpg';"
+                         class="card-img-top" style="height: 200px; object-fit: cover;" alt="Book cover" />
+                    <div class="card-body">
+                        <h5 class="card-title">@pick.Title</h5>
+                        <p class="card-text text-muted">@pick.Author</p>
+                        <span class="badge @GenreStyleHelper.GetGenreBadgeClass(pick.Genre)">@pick.Genre</span>
+                        <p class="card-text mt-2"><strong>$@pick.Price</strong></p>
+                        <a asp-action="Details" asp-route-id="@pick.Id" class="btn btn-outline-primary btn-sm">View</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
