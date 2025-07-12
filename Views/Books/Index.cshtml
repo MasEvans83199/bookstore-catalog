@@ -10,58 +10,41 @@
     <p class="lead text-muted">Find timeless classics and hidden gems</p>
 </div>
 
-<p class="text-muted">
-    Staff Picks Count: @Model.StaffPicks?.Count
-</p>
-
-
 @if (Model.StaffPicks != null && Model.StaffPicks.Any())
 {
     <div class="container mt-4 mb-4">
         <h2 class="mb-3">📚 Staff Picks</h2>
-        <div id="staffPicksCarousel" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-inner">
-                @for (int i = 0; i < Model.StaffPicks.Count(); i += 3)
+        <div class="swiper staff-picks-swiper">
+            <div class="swiper-wrapper">
+                @foreach (var book in Model.StaffPicks)
                 {
-                    <div class="carousel-item @(i == 0 ? "active" : "")">
-                        <div class="row">
-                            @foreach (var book in Model.StaffPicks.Skip(i).Take(3))
-                            {
-                                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                                    <div class="card h-100 shadow-sm">
-                                        <img src="@book.CoverImageUrl"
-                                             onerror="this.onerror=null;this.src='/images/fallback.jpg';"
-                                             class="card-img-top"
-                                             style="height: 250px; object-fit: cover;"
-                                             alt="Book cover" />
-                                        <div class="card-body">
-                                            <h5 class="card-title">@book.Title</h5>
-                                            <p class="card-text text-muted">@book.Author</p>
-                                            <span class="badge bg-secondary">@book.Genre</span>
-                                            <p class="card-text mt-2"><strong>$@book.Price</strong></p>
-                                            <div class="d-flex flex-wrap gap-2">
-                                                <a asp-action="Details" asp-route-id="@book.Id" class="btn btn-outline-primary btn-sm">View</a>
-                                                <form asp-action="ToggleFavorite" asp-route-id="@book.Id" method="post" class="d-inline">
-                                                    <button type="submit" class="btn btn-outline-danger btn-sm @(book.IsFavorite ? "active fw-bold" : "")">
-                                                        <i class="fas fa-heart"></i> @(book.IsFavorite ? "Favorited" : "Favorite")
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
+                    <div class="swiper-slide">
+                        <div class="card h-100 shadow-sm">
+                            <img src="@book.CoverImageUrl"
+                                 onerror="this.onerror=null;this.src='/images/fallback.jpg';"
+                                 class="card-img-top staff-picks-img"
+                                 alt="Book cover" />
+                            <div class="card-body">
+                                <h5 class="card-title">@book.Title</h5>
+                                <p class="card-text text-muted">@book.Author</p>
+                                <span class="badge @GenreStyleHelper.GetGenreBadgeClass(book.Genre)">@book.Genre</span>
+                                <p class="card-text mt-2"><strong>$@book.Price</strong></p>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a asp-action="Details" asp-route-id="@book.Id" class="btn btn-outline-primary btn-sm">View</a>
+                                    <form asp-action="ToggleFavorite" asp-route-id="@book.Id" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm @(book.IsFavorite ? "active fw-bold" : "")">
+                                            <i class="fas fa-heart"></i> @(book.IsFavorite ? "Favorited" : "Favorite")
+                                        </button>
+                                    </form>
                                 </div>
-                            }
+                            </div>
                         </div>
                     </div>
                 }
             </div>
-
-            <button class="carousel-control-prev wide-control" type="button" data-bs-target="#staffPicksCarousel" data-bs-slide="prev">
-                <span class="carousel-arrow">&larr;</span>
-            </button>
-            <button class="carousel-control-next wide-control" type="button" data-bs-target="#staffPicksCarousel" data-bs-slide="next">
-                <span class="carousel-arrow">&rarr;</span>
-            </button>
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-pagination"></div>
         </div>
     </div>
 }
@@ -200,3 +183,38 @@ else
 }
 
 <a asp-action="Create" class="btn btn-success mt-3">Add New Book</a>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    new Swiper('.staff-picks-swiper', {
+        autoplay: {
+            delay: 5000,
+            disableOnInteraction: false,
+        },
+        loop: true,
+          spaceBetween: 16,
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          breakpoints: {
+            0: {
+              slidesPerView: 1,
+            },
+            576: {
+              slidesPerView: 2,
+            },
+            768: {
+              slidesPerView: 3,
+            },
+            992: {
+              slidesPerView: 4,
+            },
+          }
+        });
+      });
+</script>
