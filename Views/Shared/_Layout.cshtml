@@ -21,8 +21,72 @@
             display: flex;
             flex-direction: column;
         }
-        footer {
-            margin-top: auto;
+        /* ===== Navbar ===== */
+        .custom-navbar {
+            background: linear-gradient(to right, #3e2f24, #5d3a00);
+            font-family: 'Playfair Display', serif;
+            border-bottom: 2px solid #b08b4f;
+        }
+        
+        .custom-navbar .navbar-toggler {
+            border-color: #e0c38c;
+            background-color: #5d3a00;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .custom-navbar .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(240, 222, 189, 0.85)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        .custom-navbar .navbar-brand {
+            color: #f5e3c0;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+        }
+
+        .custom-navbar .brand-text {
+            border-bottom: 2px solid #b08b4f;
+        }
+
+        .custom-navbar .nav-link {
+            color: #f5e3c0;
+            transition: color 0.2s ease;
+        }
+
+        .custom-navbar .nav-link:hover,
+        .custom-navbar .nav-link:focus {
+            color: #e0c38c;
+            text-decoration: underline;
+        }
+
+        /* ===== Footer ===== */
+        .custom-footer {
+            background: linear-gradient(to right, #3e2f24, #5d3a00);
+            color: #f5e3c0;
+            font-family: 'Open Sans', sans-serif;
+            border-top: 2px solid #b08b4f;
+        }
+
+        .custom-footer a {
+            color: #e0c38c;
+            text-decoration: none;
+            margin: 0 0.25rem;
+        }
+
+        .custom-footer a:hover,
+        .custom-footer a:focus {
+            text-decoration: underline;
+        }
+
+        .custom-footer .footer-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
         }
         h1, h2, h3, .card-title {
             font-family: 'Playfair Display', serif;
@@ -39,7 +103,17 @@
             border-radius: 12px;
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease;
         }
+        
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
 
+        .card-body .d-flex {
+            margin-top: auto;
+        }
+        
         .card-img-top {
             height: 200px;
             border-top-left-radius: 12px;
@@ -49,20 +123,58 @@
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.15);
         }
+
         .card-title {
             font-family: 'Playfair Display', serif;
             font-weight: bold;
+            font-size: 1.1rem;
+            line-height: 1.3;
+            max-height: 2.6rem;  /* enough for ~2 lines */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
 
+        .card-text {
+            margin-bottom: 0.5rem;
+        }
+
+        .card-header {
+            font-family: 'Playfair Display', serif;
+            font-weight: bold;
+        }
+        
         .badge {
             font-size: 0.9rem;
             padding: 0.5em 0.75em;
+        }
+        
+        .btn-danger {
+            background-color: #a82323;
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background-color: #851c1c;
+        }
+
+        .btn-outline-secondary {
+            border-color: #5d3a00;
+            color: #5d3a00;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #5d3a00;
+            color: #fffdf9;
         }
 
         .btn-warning {
             background-color: #d97706;
             border: none;
         }
+        
         .btn {
             transition: background-color 0.2s ease;
         }
@@ -71,18 +183,22 @@
             background-color: #5d3a00;
             border: none;
         }
+        
         .btn-primary:hover {
             background-color: #3e2a00;
         }
+        
         .btn-outline-danger.active {
             background-color: #dc3545;
             color: #fff;
             border-color: #dc3545;
         }
+        
         .badge {
             background-color: #b08b4f;
             font-weight: 500;
         }
+        
         .wide-control {
             top: 0;
             bottom: 0;
@@ -128,6 +244,10 @@
             object-fit: cover;
         }
 
+        main {
+            flex: 1 0 auto;
+        }
+        
         @@media (min-width: 576px) {
         .staff-picks-img {
             height: 250px;
@@ -149,10 +269,10 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #3e2f24; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <nav class="navbar navbar-expand-lg custom-navbar shadow-sm">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-controller="Books" asp-action="Index" style="font-family: 'Playfair Display', serif; font-size: 1.6rem;">
-                    📖 Books-A-Dozen
+                <a class="navbar-brand" asp-controller="Books" asp-action="Index">
+                    📖 <span class="brand-text">Books-A-Dozen</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -160,28 +280,36 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
-                            <a class="nav-link text-light" asp-controller="Books" asp-action="Index">Browse</a>
+                            <a class="nav-link" asp-controller="Books" asp-action="Index">Browse</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-light" asp-controller="Books" asp-action="Create">Add Book</a>
+                            <a class="nav-link" asp-controller="Books" asp-action="Create">Add Book</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-light" asp-controller="Books" asp-action="Search">Import</a>
+                            <a class="nav-link" asp-controller="Books" asp-action="Search">Import</a>
                         </li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    <main role="main" class="container pb-3">
+        @RenderBody()
+    </main>
 
-    <footer class="mt-auto bg-dark text-white text-center py-3 shadow-lg">
-        <div>
-            © @DateTime.Now.Year Books-A-Dozen · Designed with ASP.NET
+    <footer class="custom-footer text-center py-4">
+        <div class="container">
+            <div class="footer-brand mb-2">
+                📖 Books-A-Dozen
+            </div>
+            <div class="footer-links mb-2">
+                <a asp-controller="Books" asp-action="Index">Home</a> ·
+                <a asp-controller="Books" asp-action="Create">Add Book</a> ·
+                <a asp-controller="Books" asp-action="Search">Import</a>
+            </div>
+            <div class="footer-copy">
+                &copy; @DateTime.Now.Year Books-A-Dozen. Designed with ASP.NET.
+            </div>
         </div>
     </footer>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
